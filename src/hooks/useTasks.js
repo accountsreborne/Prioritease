@@ -1,83 +1,125 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '../supabase'
 
-const STORAGE_KEY = 'taskswipe_tasks'
-
-const DEFAULT_TASKS = [
-  {
-    id: '1',
-    title: 'Review pull requests',
-    description: 'Go through the open PRs and leave feedback',
-    links: [{ label: 'GitHub', url: 'https://github.com' }],
-    status: 'active',
-    createdAt: Date.now() - 3000
-  },
-  {
-    id: '2',
-    title: 'Update documentation',
-    description: 'Sync the API docs with recent changes to the codebase',
-    links: [],
-    status: 'active',
-    createdAt: Date.now() - 2000
-  },
-  {
-    id: '3',
-    title: 'Deploy staging build',
-    description: null,
-    links: [],
-    status: 'active',
-    createdAt: Date.now() - 1000
+function dbToTask(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    links: row.links || [],
+    status: row.status,
+    createdAt: new Date(row.created_at).getTime(),
+    resolvedAt: row.resolved_at ? new Date(row.resolved_at).getTime() : undefined,
   }
-]
-
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {}
-  return DEFAULT_TASKS
-}
-
-function save(tasks) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
-  } catch {}
 }
 
 export function useTasks() {
-  const [tasks, setTasks] = useState(load)
+  const [tasks, setTasks] = useState([])
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const update = useCallback((next) => {
-    setTasks(next)
-    save(next)
+  // Auth listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const addTask = useCallback((task) => {
-    const newTask = {
-      id: crypto.randomUUID(),
-      title: task.title.trim(),
-      description: task.description?.trim() || null,
-      links: task.links || [],
-      status: 'active',
-      createdAt: Date.now()
+  // Fetch tasks when user changes
+  useEffect(() => {
+    if (!user) {
+      setTasks([])
+      setLoading(false)
+      return
     }
-    update(prev => [newTask, ...prev])
-  }, [update])
 
-  const markDone = useCallback((id) => {
-    update(prev => prev.map(t => t.id === id ? { ...t, status: 'done', resolvedAt: Date.now() } : t))
-  }, [update])
+    setLoading(true)
+    supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', user.id)
+      .then(({ data, error }) => {
+        if (!error && data) setTasks(data.map(dbToTask))
+        setLoading(false)
+      })
+  }, [user])
 
-  const markBacklog = useCallback((id) => {
-    update(prev => prev.map(t => t.id === id ? { ...t, status: 'backlog', resolvedAt: Date.now() } : t))
-  }, [update])
+  const addTask = useCallback(async (task) => {
+    if (!user) return
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        title: task.title.trim(),
+        description: task.description?.trim() || null,
+        links: task.links || [],
+        status: 'active',
+        user_id: user.id,
+      })
+      .select()
+      .single()
 
-  const restoreTask = useCallback((id) => {
-    update(prev => prev.map(t => t.id === id ? { ...t, status: 'active', resolvedAt: undefined } : t))
-  }, [update])
+    if (!error && data) {
+      setTasks(prev => [dbToTask(data), ...prev])
+    }
+  }, [user])
 
-  const deleteTask = useCallback((id) => {
-    update(prev => prev.filter(t => t.id !== id))
-  }, [update])
+  const markDone = useCallback(async (id) => {
+    const resolved_at = new Date().toISOString()
+    const { error } = await supabase
+      .from('tasks')
+      .update({ status: 'done', resolved_at })
+      .eq('id', id)
+
+    if (!error) {
+      setTasks(prev => prev.map(t =>
+        t.id === id ? { ...t, status: 'done', resolvedAt: new Date(resolved_at).getTime() } : t
+      ))
+    }
+  }, [])
+
+  const markBacklog = useCallback(async (id) => {
+    const resolved_at = new Date().toISOString()
+    const { error } = await supabase
+      .from('tasks')
+      .update({ status: 'backlog', resolved_at })
+      .eq('id', id)
+
+    if (!error) {
+      setTasks(prev => prev.map(t =>
+        t.id === id ? { ...t, status: 'backlog', resolvedAt: new Date(resolved_at).getTime() } : t
+      ))
+    }
+  }, [])
+
+  const restoreTask = useCallback(async (id) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ status: 'active', resolved_at: null })
+      .eq('id', id)
+
+    if (!error) {
+      setTasks(prev => prev.map(t =>
+        t.id === id ? { ...t, status: 'active', resolvedAt: undefined } : t
+      ))
+    }
+  }, [])
+
+  const deleteTask = useCallback(async (id) => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id)
+
+    if (!error) {
+      setTasks(prev => prev.filter(t => t.id !== id))
+    }
+  }, [])
 
   const activeTasks = tasks.filter(t => t.status === 'active').sort((a, b) => a.createdAt - b.createdAt)
   const doneTasks = tasks.filter(t => t.status === 'done').sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0))
@@ -92,6 +134,8 @@ export function useTasks() {
     markDone,
     markBacklog,
     restoreTask,
-    deleteTask
+    deleteTask,
+    user,
+    loading,
   }
 }

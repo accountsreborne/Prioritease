@@ -4,6 +4,7 @@ import CardStack from './components/CardStack'
 import AddTaskModal from './components/AddTaskModal'
 import TaskListView from './components/TaskListView'
 import CompletedView from './components/CompletedView'
+import AuthScreen from './components/AuthScreen'
 
 const VIEWS = {
   STACK: 'stack',
@@ -12,9 +13,30 @@ const VIEWS = {
 }
 
 export default function App() {
-  const { activeTasks, doneTasks, backlogTasks, addTask, markDone, markBacklog, restoreTask } = useTasks()
+  const { activeTasks, doneTasks, backlogTasks, addTask, markDone, markBacklog, restoreTask, user, loading } = useTasks()
   const [view, setView] = useState(VIEWS.STACK)
   const [showAddModal, setShowAddModal] = useState(false)
+
+  if (loading) {
+    return (
+      <div style={{
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--text-muted)',
+        fontFamily: 'var(--font-mono)',
+        fontSize: 13,
+        letterSpacing: '0.08em',
+      }}>
+        Loading…
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <AuthScreen />
+  }
 
   return (
     <div style={{
