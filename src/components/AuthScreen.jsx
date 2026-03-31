@@ -121,7 +121,7 @@ export default function AuthScreen() {
               transition: 'background 0.15s, color 0.15s',
             }}
           >
-            {loading ? 'Sending…' : 'Send magic link'}
+            {loading ? 'Sending…' : 'Merlin will message you'}
           </button>
         </form>
       )}
