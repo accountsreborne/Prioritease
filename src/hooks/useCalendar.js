@@ -91,19 +91,30 @@ export function useCalendar() {
     }
   }, [token])
 
-  // Create an all-day event on today's date from a task
-  const createEvent = useCallback(async ({ title, description, links }) => {
+  // Create a calendar event from a task — timed if start/endTime are set, all-day otherwise
+  const createEvent = useCallback(async ({ title, description, links, startTime, endTime }) => {
     if (!token) return null
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const today = new Date().toISOString().split('T')[0]
     const descParts = [
       description,
       ...(links || []).map(l => `${l.label}: ${l.url}`)
     ].filter(Boolean)
+
+    let start, end
+    if (startTime) {
+      start = { dateTime: startTime, timeZone: tz }
+      end = { dateTime: endTime || new Date(new Date(startTime).getTime() + 60 * 60 * 1000).toISOString(), timeZone: tz }
+    } else {
+      start = { date: today }
+      end = { date: today }
+    }
+
     const event = {
       summary: title,
       description: descParts.join('\n') || undefined,
-      start: { date: today },
-      end: { date: today },
+      start,
+      end,
     }
     try {
       const res = await fetch(

@@ -10,6 +10,8 @@ function dbToTask(row) {
     status: row.status,
     createdAt: new Date(row.created_at).getTime(),
     resolvedAt: row.resolved_at ? new Date(row.resolved_at).getTime() : undefined,
+    startTime: row.start_time || null,
+    endTime: row.end_time || null,
   }
 }
 
@@ -60,6 +62,8 @@ export function useTasks() {
         links: task.links || [],
         status: 'active',
         user_id: user.id,
+        start_time: task.startTime || null,
+        end_time: task.endTime || null,
       })
       .select()
       .single()

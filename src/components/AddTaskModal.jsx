@@ -6,6 +6,9 @@ export default function AddTaskModal({ onAdd, onClose }) {
   const [links, setLinks] = useState([])
   const [linkInput, setLinkInput] = useState({ label: '', url: '' })
   const [showLinkForm, setShowLinkForm] = useState(false)
+  const [date, setDate] = useState('')
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
 
   const addLink = () => {
     if (!linkInput.url.trim()) return
@@ -21,7 +24,13 @@ export default function AddTaskModal({ onAdd, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!title.trim()) return
-    onAdd({ title, description, links })
+    let startISO = null
+    let endISO = null
+    if (date) {
+      startISO = new Date(`${date}T${startTime || '00:00'}`).toISOString()
+      if (endTime) endISO = new Date(`${date}T${endTime}`).toISOString()
+    }
+    onAdd({ title, description, links, startTime: startISO, endTime: endISO })
     onClose()
   }
 
@@ -256,6 +265,68 @@ export default function AddTaskModal({ onAdd, onClose }) {
               >
                 <PlusIcon size={14} /> Add link
               </button>
+            )}
+          </div>
+
+          {/* Schedule */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Schedule <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span>
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={e => { setDate(e.target.value); if (!e.target.value) { setStartTime(''); setEndTime('') } }}
+              style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '10px 14px',
+                color: date ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontSize: 15,
+                width: '100%',
+                colorScheme: 'dark'
+              }}
+            />
+            {date && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>START</label>
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={e => setStartTime(e.target.value)}
+                    style={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 14px',
+                      color: 'var(--text-primary)',
+                      fontSize: 15,
+                      width: '100%',
+                      colorScheme: 'dark'
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>END</label>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={e => setEndTime(e.target.value)}
+                    style={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 14px',
+                      color: 'var(--text-primary)',
+                      fontSize: 15,
+                      width: '100%',
+                      colorScheme: 'dark'
+                    }}
+                  />
+                </div>
+              </div>
             )}
           </div>
 

@@ -11,7 +11,9 @@ export default function CalendarView({ activeTasks, onAddTask, onClose }) {
     await onAddTask({
       title: event.summary || '(No title)',
       description: event.description?.split('\n')[0] || null,
-      links: event.htmlLink ? [{ label: 'View in Calendar', url: event.htmlLink }] : []
+      links: event.htmlLink ? [{ label: 'View in Calendar', url: event.htmlLink }] : [],
+      startTime: event.start?.dateTime || null,
+      endTime: event.end?.dateTime || null,
     })
     setImported(prev => new Set([...prev, event.id]))
   }
