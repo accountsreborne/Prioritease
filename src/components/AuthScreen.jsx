@@ -22,7 +22,7 @@ export default function AuthScreen() {
 
     setLoading(false)
     if (error) {
-      setError(error.message)
+      setError(error.message || error.msg || JSON.stringify(error))
     } else {
       setSent(true)
       setTimeout(() => inputRefs.current[0]?.focus(), 100)
