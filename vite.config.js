@@ -11,7 +11,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/*.png'],
+      includeAssets: ['icons/*.png', 'pluto-icon.png', 'og-image.jpg'],
       manifest: {
         name: 'Pluto',
         short_name: 'Pluto',
@@ -23,17 +23,17 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/icons/icon-192.png',
+            src: '/pluto-icon.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-512.png',
+            src: '/pluto-icon.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-512.png',
+            src: '/pluto-icon.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
