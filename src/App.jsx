@@ -195,20 +195,21 @@ export default function App() {
 
       {/* Bottom nav */}
       <BottomNav
+        view={view}
         planCount={planningTasks.length}
         backlogCount={backlogTasks.length}
         doneCount={doneTasks.length}
         onAdd={() => setShowAddModal(true)}
-        onPlanning={() => setView(VIEWS.PLANNING)}
-        onBacklog={() => setView(VIEWS.BACKLOG)}
-        onComplete={() => setView(VIEWS.COMPLETE)}
-        onCalendar={() => setView(VIEWS.CALENDAR)}
+        onPlanning={() => setView(view === VIEWS.PLANNING ? VIEWS.STACK : VIEWS.PLANNING)}
+        onBacklog={() => setView(view === VIEWS.BACKLOG ? VIEWS.STACK : VIEWS.BACKLOG)}
+        onComplete={() => setView(view === VIEWS.COMPLETE ? VIEWS.STACK : VIEWS.COMPLETE)}
+        onCalendar={() => setView(view === VIEWS.CALENDAR ? VIEWS.STACK : VIEWS.CALENDAR)}
       />
     </div>
   )
 }
 
-function BottomNav({ planCount, backlogCount, doneCount, onAdd, onPlanning, onBacklog, onComplete, onCalendar }) {
+function BottomNav({ view, planCount, backlogCount, doneCount, onAdd, onPlanning, onBacklog, onComplete, onCalendar }) {
   return (
     <div style={{
       position: 'fixed',
@@ -226,15 +227,16 @@ function BottomNav({ planCount, backlogCount, doneCount, onAdd, onPlanning, onBa
       zIndex: 60
     }}>
       <NavBtn onClick={onAdd} label="Add" icon={<PlusIcon />} accent />
-      <NavBtn onClick={onPlanning} label="Plan" icon={<PlanIcon />} badge={planCount > 0 ? planCount : null} badgeColor="var(--violet)" />
-      <NavBtn onClick={onBacklog} label="Backlog" icon={<ListIcon />} badge={backlogCount > 0 ? backlogCount : null} badgeColor="var(--backlog-color)" />
-      <NavBtn onClick={onComplete} label="Done" icon={<CheckIcon />} badge={doneCount > 0 ? doneCount : null} badgeColor="var(--done-color)" />
-      <NavBtn onClick={onCalendar} label="Cal" icon={<CalIcon />} />
+      <NavBtn onClick={onPlanning} label="Plan" icon={<PlanIcon />} active={view === VIEWS.PLANNING} activeColor="var(--violet)" badge={planCount > 0 ? planCount : null} badgeColor="var(--violet)" />
+      <NavBtn onClick={onBacklog} label="Backlog" icon={<ListIcon />} active={view === VIEWS.BACKLOG} activeColor="var(--backlog-color)" badge={backlogCount > 0 ? backlogCount : null} badgeColor="var(--backlog-color)" />
+      <NavBtn onClick={onComplete} label="Done" icon={<CheckIcon />} active={view === VIEWS.COMPLETE} activeColor="var(--done-color)" badge={doneCount > 0 ? doneCount : null} badgeColor="var(--done-color)" />
+      <NavBtn onClick={onCalendar} label="Cal" icon={<CalIcon />} active={view === VIEWS.CALENDAR} activeColor="var(--accent)" />
     </div>
   )
 }
 
-function NavBtn({ onClick, label, icon, badge, badgeColor, accent }) {
+function NavBtn({ onClick, label, icon, badge, badgeColor, accent, active, activeColor }) {
+  const color = active ? activeColor : accent ? 'var(--accent)' : 'var(--text-secondary)'
   return (
     <button
       onClick={onClick}
@@ -244,9 +246,10 @@ function NavBtn({ onClick, label, icon, badge, badgeColor, accent }) {
         alignItems: 'center',
         gap: 4,
         padding: '8px 20px',
-        color: accent ? 'var(--accent)' : 'var(--text-secondary)',
+        color,
         position: 'relative',
-        transition: 'color 0.15s'
+        transition: 'color 0.2s',
+        filter: active ? `drop-shadow(0 0 6px ${activeColor})` : 'none',
       }}
     >
       <div style={{
