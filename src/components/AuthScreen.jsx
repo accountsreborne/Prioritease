@@ -4,11 +4,11 @@ import { supabase } from '../supabase'
 export default function AuthScreen() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
-  const [code, setCode] = useState(['', '', '', '', '', '', '', ''])
+  const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState(null)
-  const inputRefs = useRef([])
+  const codeRef = useRef(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -25,19 +25,18 @@ export default function AuthScreen() {
       setError(error.message || error.msg || JSON.stringify(error))
     } else {
       setSent(true)
-      setTimeout(() => inputRefs.current[0]?.focus(), 100)
+      setTimeout(() => codeRef.current?.focus(), 100)
     }
   }
 
   async function handleVerify() {
-    const token = code.join('')
-    if (token.length < 8) return
+    if (code.length < 6) return
     setVerifying(true)
     setError(null)
 
     const { error } = await supabase.auth.verifyOtp({
       email: email.trim(),
-      token,
+      token: code,
       type: 'email',
     })
 
@@ -45,54 +44,20 @@ export default function AuthScreen() {
     if (error) setError(error.message)
   }
 
-  function handleCodeChange(i, val) {
-    const digit = val.replace(/\D/g, '').slice(-1)
-    const next = [...code]
-    next[i] = digit
-    setCode(next)
-    if (digit && i < 7) inputRefs.current[i + 1]?.focus()
-    if (next.every(d => d !== '')) {
-      // Auto-verify when all 8 digits entered
+  function handleCodeChange(e) {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 8)
+    setCode(val)
+    if (val.length >= 6) {
       setTimeout(() => {
-        const token = next.join('')
         setVerifying(true)
         setError(null)
-        supabase.auth.verifyOtp({ email: email.trim(), token, type: 'email' })
+        supabase.auth.verifyOtp({ email: email.trim(), token: val, type: 'email' })
           .then(({ error }) => {
             setVerifying(false)
             if (error) setError(error.message)
           })
       }, 100)
     }
-  }
-
-  function handleCodeKeyDown(i, e) {
-    if (e.key === 'Backspace' && !code[i] && i > 0) {
-      inputRefs.current[i - 1]?.focus()
-    }
-  }
-
-  function handlePaste(e) {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 8)
-    if (pasted.length === 8) {
-      setCode(pasted.split(''))
-      inputRefs.current[7]?.focus()
-    }
-  }
-
-  const inputStyle = {
-    width: 36,
-    height: 48,
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border)',
-    borderRadius: 10,
-    color: 'var(--text-primary)',
-    fontSize: 24,
-    fontFamily: 'var(--font-mono)',
-    fontWeight: 700,
-    textAlign: 'center',
-    outline: 'none',
-    caretColor: 'var(--accent)',
   }
 
   return (
@@ -178,31 +143,37 @@ export default function AuthScreen() {
           </button>
         </form>
       ) : (
-        <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+        <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ color: 'var(--text-secondary)', fontSize: 14, textAlign: 'center', lineHeight: 1.6 }}>
-            Enter the 6-digit code sent to{' '}
+            Enter the code sent to{' '}
             <span style={{ color: 'var(--accent)' }}>{email}</span>
           </div>
 
-          {/* Code inputs */}
-          <div style={{ display: 'flex', gap: 8 }} onPaste={handlePaste}>
-            {code.map((digit, i) => (
-              <input
-                key={i}
-                ref={el => inputRefs.current[i] = el}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={e => handleCodeChange(i, e.target.value)}
-                onKeyDown={e => handleCodeKeyDown(i, e)}
-                style={{
-                  ...inputStyle,
-                  borderColor: digit ? 'rgba(0,212,255,0.4)' : 'var(--border)',
-                }}
-              />
-            ))}
-          </div>
+          {/* Single code input */}
+          <input
+            ref={codeRef}
+            type="text"
+            inputMode="numeric"
+            placeholder="Enter code"
+            value={code}
+            onChange={handleCodeChange}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              background: 'var(--bg-elevated)',
+              border: `1px solid ${code.length > 0 ? 'rgba(0,212,255,0.4)' : 'var(--border)'}`,
+              borderRadius: 10,
+              color: 'var(--text-primary)',
+              fontSize: 28,
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              textAlign: 'center',
+              letterSpacing: '0.2em',
+              outline: 'none',
+              boxSizing: 'border-box',
+              transition: 'border-color 0.15s',
+            }}
+          />
 
           {error && (
             <div style={{ color: '#ff6b6b', fontSize: 13, fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
@@ -212,26 +183,26 @@ export default function AuthScreen() {
 
           <button
             onClick={handleVerify}
-            disabled={verifying || code.join('').length < 8}
+            disabled={verifying || code.length < 6}
             style={{
               width: '100%',
               padding: '12px',
-              background: verifying || code.join('').length < 8 ? 'var(--bg-elevated)' : 'var(--accent)',
-              color: verifying || code.join('').length < 8 ? 'var(--text-muted)' : '#0a0a0f',
+              background: verifying || code.length < 6 ? 'var(--bg-elevated)' : 'var(--accent)',
+              color: verifying || code.length < 6 ? 'var(--text-muted)' : '#0a0a0f',
               border: 'none',
               borderRadius: 10,
               fontSize: 14,
               fontWeight: 700,
               fontFamily: 'var(--font-mono)',
               letterSpacing: '0.06em',
-              cursor: verifying || code.join('').length < 8 ? 'not-allowed' : 'pointer',
+              cursor: verifying || code.length < 6 ? 'not-allowed' : 'pointer',
             }}
           >
             {verifying ? 'Verifying…' : 'Sign in'}
           </button>
 
           <button
-            onClick={() => { setSent(false); setCode(['', '', '', '', '', '']); setError(null) }}
+            onClick={() => { setSent(false); setCode(''); setError(null) }}
             style={{
               background: 'none',
               border: 'none',
