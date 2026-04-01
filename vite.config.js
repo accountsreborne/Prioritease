@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png'],
       manifest: {
-        name: 'TaskSwipe',
-        short_name: 'TaskSwipe',
-        description: 'Swipe through your tasks',
+        name: 'Pluto',
+        short_name: 'Pluto',
+        description: 'Task management for busy people',
         theme_color: '#0a0a0f',
         background_color: '#0a0a0f',
         display: 'standalone',

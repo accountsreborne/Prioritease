@@ -115,7 +115,7 @@ export default function AuthScreen() {
         marginBottom: 8,
         opacity: 0.8,
       }}>
-        TaskSwipe
+        Pluto
       </div>
 
       <div style={{

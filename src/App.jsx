@@ -68,7 +68,7 @@ export default function App() {
             marginBottom: 1,
             opacity: 0.8
           }}>
-            TaskSwipe
+            Pluto
           </div>
           <div style={{
             fontSize: 20,
