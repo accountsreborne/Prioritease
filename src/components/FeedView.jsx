@@ -295,15 +295,19 @@ function SwipeFeedCard({ task, color, colorDim, rightLabel, onSwipeRight, leftLa
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 10,
-              color: 'var(--text-muted)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              marginBottom: 4
-            }}>
-              {timeAgo}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <div style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: 'var(--text-muted)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}>
+                {timeAgo}
+              </div>
+              {task.priority && task.priority !== 'p1' && (
+                <FeedPriorityBadge priority={task.priority} />
+              )}
             </div>
             <div style={{
               fontSize: 15,
@@ -386,6 +390,27 @@ function formatSchedule(start, end) {
   if (!end) return `${dateStr} · ${timeStr}`
   const endStr = new Date(end).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' })
   return `${dateStr} · ${timeStr} – ${endStr}`
+}
+
+const FEED_PRIORITY_COLORS = { p0: '#ff4757', p1: '#ffa502', p2: 'var(--text-muted)' }
+
+function FeedPriorityBadge({ priority }) {
+  const color = FEED_PRIORITY_COLORS[priority] || 'var(--text-muted)'
+  return (
+    <div style={{
+      fontFamily: 'var(--font-mono)',
+      fontSize: 10,
+      fontWeight: 700,
+      color,
+      background: `${color}18`,
+      border: `1px solid ${color}55`,
+      borderRadius: 3,
+      padding: '1px 6px',
+      letterSpacing: '0.06em',
+    }}>
+      {priority.toUpperCase()}
+    </div>
+  )
 }
 
 function BackIcon() {

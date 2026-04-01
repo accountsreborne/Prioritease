@@ -10,6 +10,7 @@ export default function AddTaskModal({ onAdd, onClose }) {
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [status, setStatus] = useState('active')
+  const [priority, setPriority] = useState('p1')
 
   const addLink = () => {
     if (!linkInput.url.trim()) return
@@ -31,7 +32,7 @@ export default function AddTaskModal({ onAdd, onClose }) {
       startISO = new Date(`${date}T${startTime || '00:00'}`).toISOString()
       if (endTime) endISO = new Date(`${date}T${endTime}`).toISOString()
     }
-    onAdd({ title, description, links, startTime: startISO, endTime: endISO, status })
+    onAdd({ title, description, links, startTime: startISO, endTime: endISO, status, priority })
     onClose()
   }
 
@@ -329,6 +330,47 @@ export default function AddTaskModal({ onAdd, onClose }) {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Priority */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Priority
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { value: 'p0', label: 'P0', color: '#ff4757', desc: 'Critical' },
+                { value: 'p1', label: 'P1', color: '#ffa502', desc: 'Normal' },
+                { value: 'p2', label: 'P2', color: 'var(--text-muted)', desc: 'Low' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setPriority(opt.value)}
+                  style={{
+                    flex: 1,
+                    padding: '9px 8px',
+                    background: priority === opt.value ? `${opt.color}22` : 'var(--bg-surface)',
+                    border: `1px solid ${priority === opt.value ? opt.color + '88' : 'var(--border)'}`,
+                    borderRadius: 'var(--radius-sm)',
+                    color: priority === opt.value ? opt.color : 'var(--text-secondary)',
+                    fontSize: 12,
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 700,
+                    letterSpacing: '0.06em',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
+                  }}
+                >
+                  <span>{opt.label}</span>
+                  <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.7, letterSpacing: '0.04em' }}>{opt.desc}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Status */}

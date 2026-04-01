@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabase'
 
+const PRIORITY_ORDER = { p0: 0, p1: 1, p2: 2 }
+
 function dbToTask(row) {
   return {
     id: row.id,
@@ -8,11 +10,20 @@ function dbToTask(row) {
     description: row.description,
     links: row.links || [],
     status: row.status,
+    priority: row.priority || 'p1',
     createdAt: new Date(row.created_at).getTime(),
     resolvedAt: row.resolved_at ? new Date(row.resolved_at).getTime() : undefined,
     startTime: row.start_time || null,
     endTime: row.end_time || null,
   }
+}
+
+function sortByPriorityThenTime(a, b) {
+  const pDiff = (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1)
+  if (pDiff !== 0) return pDiff
+  const tA = a.startTime ? new Date(a.startTime).getTime() : a.createdAt
+  const tB = b.startTime ? new Date(b.startTime).getTime() : b.createdAt
+  return tA - tB
 }
 
 export function useTasks() {
@@ -61,6 +72,7 @@ export function useTasks() {
         description: task.description?.trim() || null,
         links: task.links || [],
         status: task.status || 'active',
+        priority: task.priority || 'p1',
         user_id: user.id,
         start_time: task.startTime || null,
         end_time: task.endTime || null,
@@ -125,8 +137,8 @@ export function useTasks() {
     }
   }, [])
 
-  const planningTasks = tasks.filter(t => t.status === 'planning').sort((a, b) => a.createdAt - b.createdAt)
-  const activeTasks = tasks.filter(t => t.status === 'active').sort((a, b) => a.createdAt - b.createdAt)
+  const planningTasks = tasks.filter(t => t.status === 'planning').sort(sortByPriorityThenTime)
+  const activeTasks = tasks.filter(t => t.status === 'active').sort(sortByPriorityThenTime)
   const backlogTasks = tasks.filter(t => t.status === 'backlog').sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0))
   const doneTasks = tasks.filter(t => t.status === 'done').sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0))
 

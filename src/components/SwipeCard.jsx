@@ -184,15 +184,20 @@ export default function SwipeCard({ task, onSwipeRight, onSwipeLeft, isTop, hasM
 
         {/* Card content */}
         <div style={{ flex: 1, padding: '28px 24px 20px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
-          {/* Task ID / meta */}
-          <div style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 11,
-            color: 'var(--text-muted)',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase'
-          }}>
-            TASK_{task.id.slice(0, 6).toUpperCase()}
+          {/* Task ID / meta + priority badge */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              color: 'var(--text-muted)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase'
+            }}>
+              TASK_{task.id.slice(0, 6).toUpperCase()}
+            </div>
+            {task.priority && task.priority !== 'p1' && (
+              <PriorityBadge priority={task.priority} />
+            )}
           </div>
 
           {/* Title */}
@@ -302,6 +307,29 @@ export default function SwipeCard({ task, onSwipeRight, onSwipeLeft, isTop, hasM
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+const PRIORITY_COLORS = { p0: '#ff4757', p1: '#ffa502', p2: 'var(--text-muted)' }
+const PRIORITY_LABELS = { p0: 'P0', p1: 'P1', p2: 'P2' }
+
+function PriorityBadge({ priority }) {
+  const color = PRIORITY_COLORS[priority] || 'var(--text-muted)'
+  const label = PRIORITY_LABELS[priority] || priority.toUpperCase()
+  return (
+    <div style={{
+      fontFamily: 'var(--font-mono)',
+      fontSize: 11,
+      fontWeight: 700,
+      color,
+      background: `${color}18`,
+      border: `1px solid ${color}55`,
+      borderRadius: 4,
+      padding: '2px 7px',
+      letterSpacing: '0.08em',
+    }}>
+      {label}
     </div>
   )
 }
