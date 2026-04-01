@@ -223,7 +223,7 @@ function BottomNav({ planCount, backlogCount, doneCount, onAdd, onPlanning, onBa
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-around',
-      zIndex: 40
+      zIndex: 60
     }}>
       <NavBtn onClick={onAdd} label="Add" icon={<PlusIcon />} accent />
       <NavBtn onClick={onPlanning} label="Plan" icon={<PlanIcon />} badge={planCount > 0 ? planCount : null} badgeColor="var(--violet)" />
