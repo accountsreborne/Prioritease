@@ -174,7 +174,7 @@ export default function AuthScreen() {
               transition: 'background 0.15s, color 0.15s',
             }}
           >
-            {loading ? 'Sending…' : 'Merlin will message you'}
+            {loading ? 'Sending…' : 'Pluto code'}
           </button>
         </form>
       ) : (
