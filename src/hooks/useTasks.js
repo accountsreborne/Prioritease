@@ -60,7 +60,7 @@ export function useTasks() {
         title: task.title.trim(),
         description: task.description?.trim() || null,
         links: task.links || [],
-        status: 'active',
+        status: task.status || 'active',
         user_id: user.id,
         start_time: task.startTime || null,
         end_time: task.endTime || null,
@@ -125,18 +125,41 @@ export function useTasks() {
     }
   }, [])
 
+  const planningTasks = tasks.filter(t => t.status === 'planning').sort((a, b) => a.createdAt - b.createdAt)
   const activeTasks = tasks.filter(t => t.status === 'active').sort((a, b) => a.createdAt - b.createdAt)
-  const doneTasks = tasks.filter(t => t.status === 'done').sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0))
   const backlogTasks = tasks.filter(t => t.status === 'backlog').sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0))
+  const doneTasks = tasks.filter(t => t.status === 'done').sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0))
+
+  const moveToStatus = useCallback(async (id, status) => {
+    const resolved_at = status === 'done' ? new Date().toISOString() : null
+    const { error } = await supabase
+      .from('tasks')
+      .update({ status, resolved_at })
+      .eq('id', id)
+    if (!error) {
+      setTasks(prev => prev.map(t =>
+        t.id === id ? { ...t, status, resolvedAt: resolved_at ? new Date(resolved_at).getTime() : undefined } : t
+      ))
+    }
+  }, [])
+
+  const moveToActive = useCallback((id) => moveToStatus(id, 'active'), [moveToStatus])
+  const moveToPlanning = useCallback((id) => moveToStatus(id, 'planning'), [moveToStatus])
+  const moveToBacklog = useCallback((id) => moveToStatus(id, 'backlog'), [moveToStatus])
 
   return {
     tasks,
+    planningTasks,
     activeTasks,
-    doneTasks,
     backlogTasks,
+    doneTasks,
     addTask,
     markDone,
     markBacklog,
+    moveToStatus,
+    moveToActive,
+    moveToPlanning,
+    moveToBacklog,
     restoreTask,
     deleteTask,
     user,

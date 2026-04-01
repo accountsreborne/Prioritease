@@ -2,20 +2,20 @@ import { useState } from 'react'
 import { useTasks } from './hooks/useTasks'
 import CardStack from './components/CardStack'
 import AddTaskModal from './components/AddTaskModal'
-import TaskListView from './components/TaskListView'
-import CompletedView from './components/CompletedView'
+import FeedView from './components/FeedView'
 import AuthScreen from './components/AuthScreen'
 import CalendarView from './components/CalendarView'
 
 const VIEWS = {
   STACK: 'stack',
-  LIST: 'list',
-  DONE: 'done',
+  PLANNING: 'planning',
+  BACKLOG: 'backlog',
+  COMPLETE: 'complete',
   CALENDAR: 'calendar'
 }
 
 export default function App() {
-  const { activeTasks, doneTasks, backlogTasks, addTask, markDone, markBacklog, restoreTask, user, loading } = useTasks()
+  const { planningTasks, activeTasks, backlogTasks, doneTasks, addTask, markDone, markBacklog, moveToActive, moveToPlanning, moveToBacklog, user, loading } = useTasks()
   const [view, setView] = useState(VIEWS.STACK)
   const [showAddModal, setShowAddModal] = useState(false)
 
@@ -133,19 +133,48 @@ export default function App() {
       />
 
       {/* Overlaid views */}
-      {view === VIEWS.LIST && (
-        <TaskListView
-          activeTasks={activeTasks}
-          backlogTasks={backlogTasks}
-          onRestore={restoreTask}
+      {/* Planning: right → Backlog, no left */}
+      {view === VIEWS.PLANNING && (
+        <FeedView
+          title="Planning"
+          label="Up Next"
+          color="var(--violet)"
+          colorDim="rgba(124,58,237,0.15)"
+          tasks={planningTasks}
+          rightLabel="Backlog"
+          onSwipeRight={moveToBacklog}
           onClose={() => setView(VIEWS.STACK)}
+          emptyText="Nothing in planning"
         />
       )}
-      {view === VIEWS.DONE && (
-        <CompletedView
-          doneTasks={doneTasks}
-          onRestore={restoreTask}
+      {/* Backlog: right → In Progress, left → Planning */}
+      {view === VIEWS.BACKLOG && (
+        <FeedView
+          title="Backlog"
+          label="Parked"
+          color="var(--backlog-color)"
+          colorDim="var(--backlog-dim)"
+          tasks={backlogTasks}
+          rightLabel="In Progress"
+          onSwipeRight={moveToActive}
+          leftLabel="Planning"
+          onSwipeLeft={moveToPlanning}
           onClose={() => setView(VIEWS.STACK)}
+          emptyText="Backlog is clear"
+        />
+      )}
+      {/* Complete: left → In Progress, no right */}
+      {view === VIEWS.COMPLETE && (
+        <FeedView
+          title="Complete"
+          label="Done"
+          color="var(--done-color)"
+          colorDim="var(--done-dim)"
+          tasks={doneTasks}
+          leftLabel="In Progress"
+          onSwipeLeft={moveToActive}
+          onClose={() => setView(VIEWS.STACK)}
+          emptyText="Nothing completed yet"
         />
       )}
       {view === VIEWS.CALENDAR && (
@@ -166,17 +195,20 @@ export default function App() {
 
       {/* Bottom nav */}
       <BottomNav
+        planCount={planningTasks.length}
+        backlogCount={backlogTasks.length}
         doneCount={doneTasks.length}
         onAdd={() => setShowAddModal(true)}
-        onList={() => setView(VIEWS.LIST)}
-        onDone={() => setView(VIEWS.DONE)}
+        onPlanning={() => setView(VIEWS.PLANNING)}
+        onBacklog={() => setView(VIEWS.BACKLOG)}
+        onComplete={() => setView(VIEWS.COMPLETE)}
         onCalendar={() => setView(VIEWS.CALENDAR)}
       />
     </div>
   )
 }
 
-function BottomNav({ doneCount, onAdd, onList, onDone, onCalendar }) {
+function BottomNav({ planCount, backlogCount, doneCount, onAdd, onPlanning, onBacklog, onComplete, onCalendar }) {
   return (
     <div style={{
       position: 'fixed',
@@ -193,36 +225,11 @@ function BottomNav({ doneCount, onAdd, onList, onDone, onCalendar }) {
       justifyContent: 'space-around',
       zIndex: 40
     }}>
-      {/* Add task */}
-      <NavBtn
-        onClick={onAdd}
-        label="Add"
-        icon={<PlusIcon />}
-        accent
-      />
-
-      {/* Task list */}
-      <NavBtn
-        onClick={onList}
-        label="Queue"
-        icon={<ListIcon />}
-      />
-
-      {/* Completed */}
-      <NavBtn
-        onClick={onDone}
-        label="Done"
-        icon={<CheckIcon />}
-        badge={doneCount > 0 ? doneCount : null}
-        badgeColor="var(--done-color)"
-      />
-
-      {/* Calendar */}
-      <NavBtn
-        onClick={onCalendar}
-        label="Cal"
-        icon={<CalIcon />}
-      />
+      <NavBtn onClick={onAdd} label="Add" icon={<PlusIcon />} accent />
+      <NavBtn onClick={onPlanning} label="Plan" icon={<PlanIcon />} badge={planCount > 0 ? planCount : null} badgeColor="var(--violet)" />
+      <NavBtn onClick={onBacklog} label="Backlog" icon={<ListIcon />} badge={backlogCount > 0 ? backlogCount : null} badgeColor="var(--backlog-color)" />
+      <NavBtn onClick={onComplete} label="Done" icon={<CheckIcon />} badge={doneCount > 0 ? doneCount : null} badgeColor="var(--done-color)" />
+      <NavBtn onClick={onCalendar} label="Cal" icon={<CalIcon />} />
     </div>
   )
 }
@@ -312,6 +319,15 @@ function CheckIcon() {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
       <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  )
+}
+
+function PlanIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
     </svg>
   )
 }

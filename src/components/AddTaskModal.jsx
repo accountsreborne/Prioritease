@@ -9,6 +9,7 @@ export default function AddTaskModal({ onAdd, onClose }) {
   const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
+  const [status, setStatus] = useState('active')
 
   const addLink = () => {
     if (!linkInput.url.trim()) return
@@ -30,7 +31,7 @@ export default function AddTaskModal({ onAdd, onClose }) {
       startISO = new Date(`${date}T${startTime || '00:00'}`).toISOString()
       if (endTime) endISO = new Date(`${date}T${endTime}`).toISOString()
     }
-    onAdd({ title, description, links, startTime: startISO, endTime: endISO })
+    onAdd({ title, description, links, startTime: startISO, endTime: endISO, status })
     onClose()
   }
 
@@ -328,6 +329,41 @@ export default function AddTaskModal({ onAdd, onClose }) {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Status */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Add to
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { value: 'active', label: 'In Progress', color: 'var(--accent)' },
+                { value: 'planning', label: 'Planning', color: 'var(--violet)' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setStatus(opt.value)}
+                  style={{
+                    flex: 1,
+                    padding: '9px 12px',
+                    background: status === opt.value ? `${opt.color}18` : 'var(--bg-surface)',
+                    border: `1px solid ${status === opt.value ? opt.color + '55' : 'var(--border)'}`,
+                    borderRadius: 'var(--radius-sm)',
+                    color: status === opt.value ? opt.color : 'var(--text-secondary)',
+                    fontSize: 12,
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Submit */}
