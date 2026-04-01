@@ -4,7 +4,7 @@ import { supabase } from '../supabase'
 export default function AuthScreen() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
-  const [code, setCode] = useState(['', '', '', '', '', ''])
+  const [code, setCode] = useState(['', '', '', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState(null)
@@ -31,7 +31,7 @@ export default function AuthScreen() {
 
   async function handleVerify() {
     const token = code.join('')
-    if (token.length < 6) return
+    if (token.length < 8) return
     setVerifying(true)
     setError(null)
 
@@ -50,9 +50,9 @@ export default function AuthScreen() {
     const next = [...code]
     next[i] = digit
     setCode(next)
-    if (digit && i < 5) inputRefs.current[i + 1]?.focus()
+    if (digit && i < 7) inputRefs.current[i + 1]?.focus()
     if (next.every(d => d !== '')) {
-      // Auto-verify when all 6 digits entered
+      // Auto-verify when all 8 digits entered
       setTimeout(() => {
         const token = next.join('')
         setVerifying(true)
@@ -73,16 +73,16 @@ export default function AuthScreen() {
   }
 
   function handlePaste(e) {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
-    if (pasted.length === 6) {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 8)
+    if (pasted.length === 8) {
       setCode(pasted.split(''))
-      inputRefs.current[5]?.focus()
+      inputRefs.current[7]?.focus()
     }
   }
 
   const inputStyle = {
-    width: 44,
-    height: 54,
+    width: 36,
+    height: 48,
     background: 'var(--bg-elevated)',
     border: '1px solid var(--border)',
     borderRadius: 10,
@@ -212,19 +212,19 @@ export default function AuthScreen() {
 
           <button
             onClick={handleVerify}
-            disabled={verifying || code.join('').length < 6}
+            disabled={verifying || code.join('').length < 8}
             style={{
               width: '100%',
               padding: '12px',
-              background: verifying || code.join('').length < 6 ? 'var(--bg-elevated)' : 'var(--accent)',
-              color: verifying || code.join('').length < 6 ? 'var(--text-muted)' : '#0a0a0f',
+              background: verifying || code.join('').length < 8 ? 'var(--bg-elevated)' : 'var(--accent)',
+              color: verifying || code.join('').length < 8 ? 'var(--text-muted)' : '#0a0a0f',
               border: 'none',
               borderRadius: 10,
               fontSize: 14,
               fontWeight: 700,
               fontFamily: 'var(--font-mono)',
               letterSpacing: '0.06em',
-              cursor: verifying || code.join('').length < 6 ? 'not-allowed' : 'pointer',
+              cursor: verifying || code.join('').length < 8 ? 'not-allowed' : 'pointer',
             }}
           >
             {verifying ? 'Verifying…' : 'Sign in'}
